@@ -179,7 +179,7 @@ public class Main {
 
     private void update(){
         String value = comboBox.getSelectedItem().toString();
-        char symbol = dataPanelValues.get(0).charAt(0);
+        char symbol = dataPanelValues.get(0).charAt(1);
         if(value.equals("USD")){
             dollar = true;
             euro = false;
