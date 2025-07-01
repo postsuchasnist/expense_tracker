@@ -180,6 +180,7 @@ public class Main {
     private void update(){
         String value = comboBox.getSelectedItem().toString();
         char symbol = dataPanelValues.get(0).charAt(1);
+        System.out.println(symbol);
         if(value.equals("USD")){
             dollar = true;
             euro = false;
@@ -397,11 +398,11 @@ public class Main {
     private String fixNegativeValueDisplay(double value){
         String newVal = "";
         if(dollar){
-            newVal = String.format("$%.2f", value);
+            newVal = String.format("$%,.2f", value);
         } else if(euro){
-            newVal = String.format("€%.2f", value);
+            newVal = String.format("€%,.2f", value);
         } else if(czk){
-            newVal = String.format("Czk %.2f", value);
+            newVal = String.format("Czk %,.2f", value);
         }
         if(newVal.startsWith("$-")){
             String numericPart = newVal.substring(2);
@@ -430,6 +431,12 @@ public class Main {
             String amountStr = transactionTable.getValueAt(selectedRow, 3).toString();
             String temp = amountStr.replace("$", "").replace("\u00A0", "").replace(",", "");
             double amount = Double.parseDouble(temp.substring(0, temp.length() - 2));
+            System.out.println(amount);
+            if(euro){
+                amount = CurrencyConverter.DollarToEuro(amount);
+            } else if(czk){
+                amount = CurrencyConverter.DollarToCzk(amount);
+            }
             if(type.equals("Income")){
                 totalAmount -= amount;
                 totalIncome -= amount;
@@ -456,16 +463,26 @@ public class Main {
             expensePanel.repaint();
             int indexToUpdate = type.equals("Income") ? 1 : 0;
             String currentValue = dataPanelValues.get(indexToUpdate);
-            String tempCurr = currentValue.replace("$", "").replace("\u00A0", "").replace(",", "");
+            String target = "$";
+            String format = "$%,.2f";
+            if(euro){
+                System.out.println("euro " + amount);
+                target = "€";
+                format = "€%,.2f";
+            } else if(czk){
+                target = "Czk";
+                format = "Czk %,.2f";
+            }
+            String tempCurr = currentValue.replace(target, "").replace("\u00A0", "").replace(",", "").replace(" ", "");
             double currentAmount = Double.parseDouble(tempCurr.substring(0, tempCurr.length() - 2));
             double updatedAmount = currentAmount + (type.equals("Income") ? -amount : amount);
             if(indexToUpdate == 1){
-                dataPanelValues.set(indexToUpdate, String.format("$%,.2f", updatedAmount));
-                dataPanelValues.set(3, String.format("$%,.2f", averageIncome));
+                dataPanelValues.set(indexToUpdate, String.format(format, updatedAmount));
+                dataPanelValues.set(3, String.format(format, averageIncome));
             }
             else{
-                dataPanelValues.set(indexToUpdate, fixNegativeValueDisplay(updatedAmount));
-                dataPanelValues.set(4, fixNegativeValueDisplay(averageExpenses));
+                dataPanelValues.set(indexToUpdate, "-" + fixNegativeValueDisplay(updatedAmount));
+                dataPanelValues.set(4, "-" + fixNegativeValueDisplay(averageExpenses));
             }
 
             // repaint the data panel
@@ -568,6 +585,11 @@ public class Main {
         String date = year + "-" + month + "-" + day;
         // convert a string into double. the following pattern is used several times
         double newAmount = Double.parseDouble(amount.replace("$", "").replace("\u00A0", "").replace(",", ""));
+        if(euro){
+            newAmount = CurrencyConverter.DollarToEuro(newAmount);
+        } else if(czk){
+            newAmount = CurrencyConverter.DollarToCzk(newAmount);
+        }
         if(type.equals("Income")){
             totalAmount += newAmount;
             totalIncome += newAmount;
@@ -586,13 +608,23 @@ public class Main {
         averageExpense.repaint();
         int indexToUpdate = type.equals("Income") ? 1 : 0;
         String currentValue = dataPanelValues.get(indexToUpdate);
-        String temp = currentValue.replace("$", "").replace("\u00A0", "").replace(",", "");
+        String target = "$";
+        String format = "$%,.2f";
+        if(euro){
+            System.out.println("euro " + amount);
+            target = "€";
+            format = "€%,.2f";
+        } else if(czk){
+            target = "Czk";
+            format = "Czk %,.2f";
+        }
+        String temp = currentValue.replace(target, "").replace("\u00A0", "").replace(",", "").replace(" ", "");
         double currentAmount = Double.parseDouble(temp.substring(0, temp.length() - 2));
         double updatedAmount = currentAmount + (type.equals("Income") ? newAmount : -newAmount);
         // Update the data panel with the new amount
         if(indexToUpdate == 1){ // income
-            dataPanelValues.set(indexToUpdate, String.format("$%,.2f", updatedAmount));
-            dataPanelValues.set(3, String.format("$%,.2f", averageIncome));
+            dataPanelValues.set(indexToUpdate, String.format(format, updatedAmount));
+            dataPanelValues.set(3, String.format(format, averageIncome));
         }
         else{
             dataPanelValues.set(indexToUpdate, fixNegativeValueDisplay(updatedAmount));
